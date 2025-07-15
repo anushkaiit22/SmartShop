@@ -38,11 +38,8 @@ For detailed setup instructions, see [SETUP_LOCAL.md](SETUP_LOCAL.md).
 3. **Start the application**:
    ```bash
    # Using Python directly
-   python run_local.py
+   python main.py
    
-   # Or use the startup scripts:
-   # Windows: start.bat
-   # Unix/Linux/macOS: ./start.sh
    ```
 
 4. **Access the API**:
