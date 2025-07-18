@@ -13,7 +13,7 @@ load_dotenv()
 
 async def test_mongodb():
     """Test MongoDB connection"""
-    print("🔍 Testing MongoDB connection...")
+    print("Testing MongoDB connection...")
     
     mongodb_url = os.getenv('MONGODB_URL')
     
@@ -54,7 +54,7 @@ async def test_mongodb():
 
 def test_redis():
     """Test Redis connection"""
-    print("\n🔍 Testing Redis connection...")
+    print("\nTesting Redis connection...")
     
     redis_url = os.getenv('REDIS_URL')
     
@@ -93,12 +93,12 @@ def test_redis():
 
 async def main():
     """Main test function"""
-    print("🧪 SmartShop - Connection Test")
+    print("SmartShop - Connection Test")
     print("=" * 40)
     
     # Check if .env file exists
     if not Path('.env').exists():
-        print("❌ .env file not found")
+        print(".env file not found")
         print("Please create .env file from env.example")
         return
     
@@ -110,14 +110,14 @@ async def main():
     
     # Summary
     print("\n" + "=" * 40)
-    print("📊 Connection Test Results:")
-    print(f"MongoDB: {'✅ OK' if mongodb_ok else '❌ FAILED'}")
-    print(f"Redis: {'✅ OK' if redis_ok else '❌ FAILED'}")
+    print("Connection Test Results:")
+    print(f"MongoDB: {'OK' if mongodb_ok else 'FAILED'}")
+    print(f"Redis: {'OK' if redis_ok else 'FAILED'}")
     
     if mongodb_ok and redis_ok:
-        print("\n🎉 All connections successful! You can now run the application.")
+        print("\nAll connections successful! You can now run the application.")
     else:
-        print("\n⚠️  Some connections failed. Please check your configuration.")
+        print("\nSome connections failed. Please check your configuration.")
         if not mongodb_ok:
             print("   - MongoDB is optional - application will run in memory-only mode")
         if not redis_ok:

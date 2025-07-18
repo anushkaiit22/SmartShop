@@ -5,7 +5,7 @@ from app.models.product import ProductSearchRequest, Platform
 
 async def demo_price_comparison():
     """Demo script for hackathon presentation"""
-    print("🚀 SmartShop Price Comparison Demo")
+    print("SmartShop Price Comparison Demo")
     print("=" * 50)
     
     # Demo queries
@@ -17,7 +17,7 @@ async def demo_price_comparison():
     ]
     
     for query in queries:
-        print(f"\n📱 Searching for: '{query}'")
+        print(f"\nSearching for: '{query}'")
         print("-" * 30)
         
         # Create search request
@@ -43,15 +43,15 @@ async def demo_price_comparison():
             
             # Display results by platform
             for platform, platform_prods in platform_products.items():
-                print(f"\n🏪 {platform.upper()}:")
+                print(f"\n{platform.upper()}:")
                 for i, product in enumerate(platform_prods[:3], 1):
-                    rating_text = f"⭐ {product.rating.rating}" if product.rating else "No rating"
-                    delivery_text = f"🚚 {product.delivery.delivery_time}"
+                    rating_text = f"{product.rating.rating}" if product.rating else "No rating"
+                    delivery_text = f"{product.delivery.delivery_time}"
                     print(f"  {i}. {product.name[:40]}...")
-                    print(f"     💰 ₹{product.price.current_price} | {rating_text} | {delivery_text}")
+                    print(f"     ₹{product.price.current_price} | {rating_text} | {delivery_text}")
             
-            print(f"\n⏱️  Search completed in {response.data.search_time:.2f} seconds")
-            print(f"📊 Total results: {response.data.total_results}")
+            print(f"\n  Search completed in {response.data.search_time:.2f} seconds")
+            print(f"  Total results: {response.data.total_results}")
             
         else:
             print(f"❌ Search failed: {response.error}")
@@ -60,7 +60,7 @@ async def demo_price_comparison():
 
 async def demo_natural_language():
     """Demo natural language processing"""
-    print("\n🤖 Natural Language Processing Demo")
+    print("\nNatural Language Processing Demo")
     print("=" * 50)
     
     natural_queries = [
@@ -70,7 +70,7 @@ async def demo_natural_language():
     ]
     
     for query in natural_queries:
-        print(f"\n💬 Query: '{query}'")
+        print(f"\nQuery: '{query}'")
         
         request = ProductSearchRequest(
             query=query,
@@ -80,18 +80,18 @@ async def demo_natural_language():
         response = await search_service.search_products(request)
         
         if response.success and response.data:
-            print(f"✅ Found {len(response.data.products)} products")
-            print(f"📝 Parsed message: {response.message}")
+            print(f"Found {len(response.data.products)} products")
+            print(f"Parsed message: {response.message}")
         else:
             print(f"❌ Failed: {response.error}")
 
 async def demo_platform_comparison():
     """Demo comparing specific platforms"""
-    print("\n🔄 Platform Comparison Demo")
+    print("\nPlatform Comparison Demo")
     print("=" * 50)
     
     # Compare e-commerce vs quick commerce
-    print("\n📦 E-commerce (Amazon, Flipkart, Meesho):")
+    print("\nE-commerce (Amazon, Flipkart, Meesho):")
     request = ProductSearchRequest(
         query="laptop",
         platforms=[Platform.AMAZON, Platform.FLIPKART, Platform.MEESHO],
@@ -102,7 +102,7 @@ async def demo_platform_comparison():
         for product in response.data.products[:3]:
             print(f"  • {product.platform.value}: ₹{product.price.current_price} | {product.delivery.delivery_time}")
     
-    print("\n⚡ Quick Commerce (Blinkit):")
+    print("\nQuick Commerce (Blinkit):")
     request = ProductSearchRequest(
         query="milk",
         platforms=[Platform.BLINKIT],
@@ -115,23 +115,23 @@ async def demo_platform_comparison():
 
 def main():
     """Run all demos"""
-    print("🎯 SmartShop - Unified Shopping Assistant")
-    print("🔗 Compare prices across Amazon, Flipkart, Meesho, and Blinkit")
-    print("💡 Features: Real-time search, Natural language processing, Price comparison")
+    print("SmartShop - Unified Shopping Assistant")
+    print("Compare prices across Amazon, Flipkart, Meesho, and Blinkit")
+    print("Features: Real-time search, Natural language processing, Price comparison")
     print("\n" + "=" * 60)
     
     asyncio.run(demo_price_comparison())
     asyncio.run(demo_natural_language())
     asyncio.run(demo_platform_comparison())
     
-    print("\n🎉 Demo completed!")
-    print("\n📋 For Hackathon Judges:")
-    print("✅ Real Flipkart integration (live data)")
-    print("✅ Mock data for other platforms (realistic)")
-    print("✅ Natural language processing")
-    print("✅ Multi-platform price comparison")
-    print("✅ Fast API responses")
-    print("✅ Production-ready architecture")
+    print("\nDemo completed!")
+    print("\nFor Hackathon Judges:")
+    print("Real Flipkart integration (live data)")
+    print("Mock data for other platforms (realistic)")
+    print("Natural language processing")
+    print("Multi-platform price comparison")
+    print("Fast API responses")
+    print("Production-ready architecture")
 
 if __name__ == "__main__":
     main() 

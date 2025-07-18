@@ -16,33 +16,33 @@ async def test_imports():
     
     try:
         from app.core.config import settings
-        print("✓ Configuration imported successfully")
+        print("Configuration imported successfully")
         
         from app.models.product import Product, Platform, PlatformType
-        print("✓ Product models imported successfully")
+        print("Product models imported successfully")
         
         from app.models.cart import Cart, CartItem
-        print("✓ Cart models imported successfully")
+        print("Cart models imported successfully")
         
         from app.services.nlp.query_parser import query_parser
-        print("✓ NLP query parser imported successfully")
+        print("NLP query parser imported successfully")
         
         from app.services.search_service import search_service
-        print("✓ Search service imported successfully")
+        print("Search service imported successfully")
         
         from app.services.cart.cart_service import cart_service
-        print("✓ Cart service imported successfully")
+        print("Cart service imported successfully")
         
         from app.services.scrapers.amazon_scraper import AmazonScraper
-        print("✓ Amazon scraper imported successfully")
+        print("Amazon scraper imported successfully")
         
         from app.services.scrapers.blinkit_scraper import BlinkitScraper
-        print("✓ Blinkit scraper imported successfully")
+        print("Blinkit scraper imported successfully")
         
         return True
         
     except Exception as e:
-        print(f"✗ Import error: {e}")
+        print(f"Import error: {e}")
         return False
 
 async def test_nlp_parsing():
@@ -125,7 +125,7 @@ async def main():
     print(f"Test Results: {passed}/{total} tests passed")
     
     if passed == total:
-        print("🎉 All tests passed! The backend is ready to run.")
+        print("All tests passed! The backend is ready to run.")
         print("\nNext steps:")
         print("1. Copy env.example to .env and configure your settings")
         print("2. Install dependencies: pip install -r requirements.txt")
@@ -133,7 +133,7 @@ async def main():
         print("4. Run the application: uvicorn main:app --reload")
         print("5. Visit http://localhost:8000/docs for API documentation")
     else:
-        print("❌ Some tests failed. Please check the errors above.")
+        print("Some tests failed. Please check the errors above.")
         sys.exit(1)
 
 if __name__ == "__main__":

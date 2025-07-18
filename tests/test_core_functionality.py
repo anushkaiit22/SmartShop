@@ -12,7 +12,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 async def test_search_functionality():
     """Test the core search functionality"""
-    print("🧪 Testing SmartShop Core Functionality")
+    print("Testing SmartShop Core Functionality")
     print("=" * 50)
     
     try:
@@ -51,14 +51,14 @@ async def test_search_functionality():
         print("\n🎉 Core functionality test completed successfully!")
         print("\n📝 Summary:")
         print("   - Search service: ✅ Working")
-        print("   - Cart service: ✅ Working (in-memory mode)")
-        print("   - Platform scrapers: ✅ Available")
-        print("   - No MongoDB required: ✅ Running in memory-only mode")
+        print("   - Cart service: Working (in-memory mode)")
+        print("   - Platform scrapers: Available")
+        print("   - No MongoDB required: Running in memory-only mode")
         
         return True
         
     except Exception as e:
-        print(f"❌ Test failed: {e}")
+        print(f"Test failed: {e}")
         import traceback
         traceback.print_exc()
         return False
@@ -87,7 +87,7 @@ async def test_api_endpoints():
 
 async def main():
     """Main test function"""
-    print("🚀 SmartShop - Core Functionality Test")
+    print("SmartShop - Core Functionality Test")
     print("=" * 50)
     print("This test verifies the application works without MongoDB")
     print()
@@ -101,8 +101,8 @@ async def main():
     # Summary
     print("\n" + "=" * 50)
     print("📊 Test Results:")
-    print(f"Core Functionality: {'✅ PASS' if core_ok else '❌ FAIL'}")
-    print(f"API Endpoints: {'✅ PASS' if api_ok else '❌ FAIL'}")
+    print(f"Core Functionality: {'PASS' if core_ok else 'FAIL'}")
+    print(f"API Endpoints: {'PASS' if api_ok else 'FAIL'}")
     
     if core_ok and api_ok:
         print("\n🎉 All tests passed! You can now run the application.")

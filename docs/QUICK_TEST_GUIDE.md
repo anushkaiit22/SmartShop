@@ -2,7 +2,7 @@
 
 This guide will help you test SmartShop functionality without setting up MongoDB or Redis.
 
-## 🚀 Quick Start (5 minutes)
+## Quick Start (5 minutes)
 
 ### 1. Install Dependencies
 ```bash
@@ -36,11 +36,11 @@ python test_core_functionality.py
 ```
 
 This will verify that:
-- ✅ All imports work
-- ✅ Search service initializes
-- ✅ Cart service works (in-memory mode)
-- ✅ API endpoints are available
-- ✅ No MongoDB required
+- All imports work
+- Search service initializes
+- Cart service works (in-memory mode)
+- API endpoints are available
+- No MongoDB required
 
 ### 4. Start the Application
 ```bash
@@ -88,10 +88,10 @@ curl -X POST "http://localhost:8000/api/v1/query/parse" \
 ## 🔄 Memory-Only Mode
 
 When MongoDB is not configured:
-- ✅ Carts are stored in memory
-- ✅ Data persists during the session
-- ❌ Data is lost when server restarts
-- ✅ Perfect for testing and development
+- Carts are stored in memory
+- Data persists during the session
+- Data is lost when server restarts
+- Perfect for testing and development
 
 ## 🚨 Limitations
 
@@ -130,14 +130,12 @@ OSError: [Errno 48] Address already in use
 ## 📝 Test Results
 
 After running `python test_core_functionality.py`, you should see:
-```
-🎉 Core functionality test completed successfully!
 
-📝 Summary:
-   - Search service: ✅ Working
-   - Cart service: ✅ Working (in-memory mode)
-   - Platform scrapers: ✅ Available
-   - No MongoDB required: ✅ Running in memory-only mode
-```
+Core functionality test completed successfully!
 
-If you see this, you're ready to test the full application! 
+Summary:
+   - Search service: Working
+   - Cart service: Working (in-memory mode)
+   - Platform scrapers: Available
+   - No MongoDB required: Running in memory-only mode
+``` 

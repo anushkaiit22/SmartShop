@@ -24,10 +24,10 @@ def check_dependencies():
         import pydantic
         import motor
         import redis
-        print("✓ All required packages are installed")
+        print("All required packages are installed")
         return True
     except ImportError as e:
-        print(f"❌ Missing dependency: {e}")
+        print(f"Missing dependency: {e}")
         print("Please run: pip install -r requirements.txt")
         return False
 
