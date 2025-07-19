@@ -8,7 +8,7 @@ const getApiBaseUrl = () => {
   }
   
   // In production, use the environment variable or fallback to relative path
-  return import.meta.env.VITE_API_URL || '';
+  return import.meta.env.VITE_API_URL || 'https://smartshop-backend-rb36f2zok-anushka-pimpales-projects.vercel.app';
 };
 
 // Create full API URL
@@ -22,6 +22,8 @@ export const createApiUrl = (endpoint) => {
 export const apiRequest = async (endpoint, options = {}) => {
   const url = createApiUrl(endpoint);
   
+  console.log('Making API request to:', url); // Debug log
+  
   const defaultOptions = {
     headers: {
       'Content-Type': 'application/json',
@@ -30,6 +32,8 @@ export const apiRequest = async (endpoint, options = {}) => {
   };
 
   const response = await fetch(url, { ...defaultOptions, ...options });
+  
+  console.log('API response status:', response.status); // Debug log
   
   if (!response.ok) {
     throw new Error(`API request failed: ${response.status} ${response.statusText}`);
@@ -67,14 +71,24 @@ export const addToCart = async (cartId, product, quantity = 1, platform = null) 
   });
 };
 
-export const robotInteract = async (userMessage, cartId = null, lastAction = null, platforms = ['flipkart']) => {
+export const robotInteract = async (userMessage, cartId = null, lastAction = null, platforms = ['flipkart'], productSelection = null, selectedProduct = null) => {
+  const body = {
+    user_message: userMessage,
+    cart_id: cartId,
+    last_action: lastAction,
+    platforms: platforms,
+  };
+  
+  if (productSelection !== null) {
+    body.product_selection = productSelection;
+  }
+  
+  if (selectedProduct !== null) {
+    body.selected_product = selectedProduct;
+  }
+  
   return apiRequest('/api/v1/robot/interact', {
     method: 'POST',
-    body: JSON.stringify({
-      user_message: userMessage,
-      cart_id: cartId,
-      last_action: lastAction,
-      platforms: platforms,
-    }),
+    body: JSON.stringify(body),
   });
 }; 

@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { robotInteract } from './utils/api';
 
 function RobotChat({ onCartIdUpdate }) {
   const [messages, setMessages] = useState([
@@ -30,12 +31,10 @@ function RobotChat({ onCartIdUpdate }) {
       const body = { user_message: userText, cart_id: cartId, last_action: lastAction, platforms: ['flipkart'] };
       if (productSelection !== null) body.product_selection = productSelection;
       if (selectedProductObj) body.selected_product = selectedProductObj;
-      const res = await fetch('/api/v1/robot/interact', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-      });
-      const data = await res.json();
+      
+      // Use the API utility function instead of direct fetch
+      const data = await robotInteract(userText, cartId, lastAction, ['flipkart'], productSelection, selectedProductObj);
+      
       if (!data.success && data.action !== 'select_product') throw new Error(data.error || 'Unknown error');
 
       if (data.action === 'select_product') {
@@ -60,7 +59,8 @@ function RobotChat({ onCartIdUpdate }) {
         setMessages((msgs) => [...msgs, { sender: 'robot', text: data.message }]);
       }
     } catch (err) {
-      setMessages((msgs) => [...msgs, { sender: 'robot', text: 'Sorry, something went wrong.' }]);
+      console.error('Robot interaction error:', err);
+      setMessages((msgs) => [...msgs, { sender: 'robot', text: `Sorry, something went wrong: ${err.message}` }]);
     } finally {
       setLoading(false);
       setInput('');

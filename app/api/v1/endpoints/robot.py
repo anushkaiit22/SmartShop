@@ -12,6 +12,11 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+# Add explicit OPTIONS handler for CORS preflight
+@router.options("/interact")
+async def robot_interact_options():
+    return {"message": "OK"}
+
 @router.post("/interact")
 async def robot_interact(
     user_message: str = Body(..., description="User's message to the robot"),
