@@ -2,13 +2,9 @@
 
 // Get the base API URL from environment or use relative path
 const getApiBaseUrl = () => {
-  // In development, use the proxy
-  if (import.meta.env.DEV) {
-    return '';
-  }
-  
-  // In production, use the environment variable or fallback to relative path
-  return import.meta.env.VITE_API_URL || 'https://smartshop-backend-rb36f2zok-anushka-pimpales-projects.vercel.app';
+  // Use relative path for both development and production
+  // This will work with the Vercel proxy configuration
+  return '';
 };
 
 // Create full API URL

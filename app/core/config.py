@@ -27,7 +27,11 @@ class Settings(BaseSettings):
         "http://127.0.0.1:8000",
         "https://smartshop-frontend.vercel.app",
         "https://smartshop-backend.vercel.app",
-        "https://*.vercel.app"  # Allow all Vercel subdomains
+        "https://smart-shop-frontend-git-master-anushka-pimpales-projects.vercel.app",
+        "https://smartshop-backend-3xenf4eub-anushka-pimpales-projects.vercel.app",
+        # Add common Vercel patterns
+        "https://smart-shop-frontend-*.vercel.app",
+        "https://smartshop-backend-*.vercel.app"
     ]
     # Scraping
     SCRAPER_TIMEOUT: int = 30

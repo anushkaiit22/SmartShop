@@ -12,6 +12,8 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
+
+
 # Add explicit OPTIONS handler for CORS preflight
 @router.options("/interact")
 async def robot_interact_options():
@@ -155,4 +157,9 @@ async def robot_interact(
         }
     except Exception as e:
         logger.error(f"Robot interaction error: {e}")
-        raise HTTPException(status_code=500, detail=str(e)) 
+        return {
+            "success": False,
+            "action": "error",
+            "message": f"An error occurred: {str(e)}",
+            "data": []
+        } 
