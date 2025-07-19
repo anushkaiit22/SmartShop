@@ -24,12 +24,17 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     
-    # CORS
+    # CORS - Updated for Render deployment
     CORS_ORIGINS: List[str] = [
         "http://localhost:3000",
+        "http://localhost:5173",  # Vite default port
         "http://localhost:8000",
         "http://127.0.0.1:3000",
-        "http://127.0.0.1:8000"
+        "http://127.0.0.1:5173",  # Vite default port
+        "http://127.0.0.1:8000",
+        "https://smartshop-frontend.onrender.com",
+        "https://smartshop-backend.onrender.com",
+        "https://*.onrender.com"  # Allow all Render subdomains
     ]
     
     # Scraping
@@ -57,6 +62,10 @@ class Settings(BaseSettings):
     DEFAULT_LATITUDE: float = 19.0760
     DEFAULT_LONGITUDE: float = 72.8777
     DEFAULT_CITY: str = "Mumbai"
+    
+    # Production settings
+    PORT: int = int(os.getenv("PORT", 8000))
+    HOST: str = "0.0.0.0"
     
     class Config:
         env_file = ".env"
