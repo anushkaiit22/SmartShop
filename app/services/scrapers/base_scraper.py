@@ -26,8 +26,8 @@ class BaseScraper(ABC):
         # More realistic headers to avoid detection
         headers = {
             'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-            'Accept-Language': 'en-US,en;q=0.5',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+            'Accept-Language': 'en-US,en;q=0.9',
             'Accept-Encoding': 'gzip, deflate, br',
             'DNT': '1',
             'Connection': 'keep-alive',
@@ -35,7 +35,11 @@ class BaseScraper(ABC):
             'Sec-Fetch-Dest': 'document',
             'Sec-Fetch-Mode': 'navigate',
             'Sec-Fetch-Site': 'none',
-            'Cache-Control': 'max-age=0'
+            'Sec-Fetch-User': '?1',
+            'Cache-Control': 'max-age=0',
+            'sec-ch-ua': '"Not_A Brand";v="8", "Chromium";v="120", "Google Chrome";v="120"',
+            'sec-ch-ua-mobile': '?0',
+            'sec-ch-ua-platform': '"Windows"'
         }
         
         self.session = aiohttp.ClientSession(
@@ -132,7 +136,10 @@ class BaseScraper(ABC):
             'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
             'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/121.0'
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/121.0',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36',
+            'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.1 Safari/605.1.15',
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0'
         ]
         
         for attempt in range(3):
@@ -155,6 +162,11 @@ class BaseScraper(ABC):
                         wait_time = int(response.headers.get('Retry-After', 60))
                         logger.warning(f"Rate limited, waiting {wait_time} seconds")
                         await asyncio.sleep(wait_time)
+                    elif response.status == 529:  # Cloudflare protection
+                        logger.warning(f"HTTP 529 - Cloudflare protection on attempt {attempt + 1} for {url}")
+                        if attempt == 2:  # Last attempt
+                            logger.error(f"Failed to access {url} after 3 attempts - blocked by Cloudflare")
+                        await asyncio.sleep(5 * (attempt + 1))  # Longer delay for 529
                     elif response.status == 503:  # Service unavailable
                         logger.warning(f"Service unavailable (503) on attempt {attempt + 1} for {url}")
                         if attempt == 2:  # Last attempt

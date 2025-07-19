@@ -1,4 +1,4 @@
-import openai
+from openai import OpenAI
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel
 import json
@@ -7,9 +7,10 @@ from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
-# Configure OpenAI
+# Configure OpenAI client
+client = None
 if settings.OPENAI_API_KEY:
-    openai.api_key = settings.OPENAI_API_KEY
+    client = OpenAI(api_key=settings.OPENAI_API_KEY)
 
 
 class ProductIntent(BaseModel):
@@ -92,11 +93,11 @@ class QueryParser:
     async def parse_query(self, query: str) -> ParsedQuery:
         """Parse natural language shopping query"""
         try:
-            if not settings.OPENAI_API_KEY:
+            if not client:
                 # Fallback to simple parsing if OpenAI is not configured
                 return self._simple_parse(query)
 
-            response = await openai.ChatCompletion.acreate(
+            response = client.chat.completions.create(
                 model="gpt-3.5-turbo",
                 messages=[
                     {"role": "system", "content": self.system_prompt},

@@ -35,7 +35,7 @@ function RobotChat({ onCartIdUpdate }) {
       // Use the API utility function instead of direct fetch
       const data = await robotInteract(userText, cartId, lastAction, ['flipkart'], productSelection, selectedProductObj);
       
-      if (!data.success && data.action !== 'select_product') throw new Error(data.error || 'Unknown error');
+      if (!data.success && data.action !== 'select_product') throw new Error(data.message || 'Unknown error');
 
       if (data.action === 'select_product') {
         setPendingProductOptions(data.data);

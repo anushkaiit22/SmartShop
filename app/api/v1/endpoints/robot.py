@@ -156,10 +156,20 @@ async def robot_interact(
             "data": [selected_product]
         }
     except Exception as e:
-        logger.error(f"Robot interaction error: {e}")
+        logger.error(f"Robot interaction error: {e}", exc_info=True)
+        # Provide more specific error messages based on the exception type
+        if "openai" in str(e).lower():
+            error_message = "AI service is temporarily unavailable. Please try again."
+        elif "timeout" in str(e).lower():
+            error_message = "Request timed out. Please try again."
+        elif "connection" in str(e).lower():
+            error_message = "Network connection issue. Please check your internet connection."
+        else:
+            error_message = f"An unexpected error occurred: {str(e)}"
+        
         return {
             "success": False,
             "action": "error",
-            "message": f"An error occurred: {str(e)}",
+            "message": error_message,
             "data": []
         } 
