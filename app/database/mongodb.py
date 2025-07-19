@@ -1,11 +1,19 @@
-from motor.motor_asyncio import AsyncIOMotorClient
 from app.core.config import settings
 import logging
 
 logger = logging.getLogger(__name__)
 
+# Try to import motor, but make it optional for Vercel deployment
+try:
+    from motor.motor_asyncio import AsyncIOMotorClient
+    MOTOR_AVAILABLE = True
+except ImportError:
+    AsyncIOMotorClient = None
+    MOTOR_AVAILABLE = False
+    logger.info("Motor (MongoDB driver) not available - running in memory-only mode")
+
 # Global database client
-client: AsyncIOMotorClient = None
+client = None
 database = None
 
 
@@ -13,9 +21,9 @@ async def connect_to_mongo():
     """Create database connection."""
     global client, database
     try:
-        # Check if MongoDB is configured
-        if not settings.MONGODB_URL:
-            logger.info("MongoDB not configured - running in memory-only mode")
+        # Check if MongoDB is configured and motor is available
+        if not settings.MONGODB_URL or not MOTOR_AVAILABLE:
+            logger.info("MongoDB not configured or motor not available - running in memory-only mode")
             return
             
         client = AsyncIOMotorClient(settings.MONGODB_URL)
@@ -35,7 +43,7 @@ async def connect_to_mongo():
 async def close_mongo_connection():
     """Close database connection."""
     global client
-    if client:
+    if client and MOTOR_AVAILABLE:
         client.close()
         logger.info("MongoDB connection closed")
 
@@ -47,6 +55,6 @@ def get_database():
 
 def get_collection(collection_name: str):
     """Get collection instance."""
-    if database is None:
-        raise RuntimeError("MongoDB not configured - cannot access collections")
+    if database is None or not MOTOR_AVAILABLE:
+        raise RuntimeError("MongoDB not configured or motor not available - cannot access collections")
     return database[collection_name] 
