@@ -3,9 +3,9 @@ import './App.css';
 import RobotChat from './RobotChat';
 
 const TABS = [
+  { label: 'Robot Assistant', value: 'robot' },
   { label: 'Quick Commerce', value: 'quick' },
   { label: 'E-Commerce', value: 'ecom' },
-  { label: 'Robot Assistant', value: 'robot' },
 ];
 
 function App() {
@@ -67,9 +67,9 @@ function App() {
       // Define platform filters based on tab
       let platformFilter = '';
       if (activeTab === 'ecom') {
-        platformFilter = 'flipkart,amazon,meesho,nykaa';
+        platformFilter = 'flipkart,amazon,meesho';
       } else if (activeTab === 'quick') {
-        platformFilter = 'blinkit,zepto,instamart';
+        platformFilter = 'blinkit';
       }
       const res = await fetch(
         `/api/v1/search/?q=${encodeURIComponent(query)}&limit=20&platforms=${platformFilter}`,
@@ -87,14 +87,14 @@ function App() {
         products = data;
       }
       if (activeTab === 'ecom') {
-        const platformOrder = ['flipkart', 'amazon', 'meesho', 'nykaa'];
+        const platformOrder = ['flipkart', 'amazon', 'meesho'];
         products.sort((a, b) => {
           const aIndex = platformOrder.indexOf(a.platform);
           const bIndex = platformOrder.indexOf(b.platform);
           return aIndex - bIndex;
         });
       } else if (activeTab === 'quick') {
-        const platformOrder = ['blinkit', 'zepto', 'instamart'];
+        const platformOrder = ['blinkit'];
         products.sort((a, b) => {
           const aIndex = platformOrder.indexOf(a.platform);
           const bIndex = platformOrder.indexOf(b.platform);
@@ -110,22 +110,70 @@ function App() {
   };
 
   return (
-    <div className="main-container">
-      <h1 className="app-title">Product Comparator</h1>
-      <div className="tabs">
+    <div className="main-container" style={{ 
+      display: 'flex', 
+      height: '100vh', 
+      width: '100vw',
+      position: 'fixed',
+      top: 0,
+      left: 0,
+      overflow: 'hidden',
+      margin: 0,
+      padding: '0 40px',
+      boxSizing: 'border-box'
+    }}>
+      {/* View Cart button at top right */}
+      <button className="view-cart-btn top-right" onClick={openCartModal} title="View Cart" style={{ position: 'absolute', top: 24, right: 40, zIndex: 10 }}>
+        🛒 View Cart
+      </button>
+      {/* Robot image at bottom right */}
+      <div className="robot-image-container" style={{ position: 'absolute', bottom: 20, right: 20, zIndex: 5, width: 120, height: 120 }}>
+        <img 
+          src="/robot-shopping-cart.png" 
+          alt="Shopping Robot Assistant" 
+          style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+        />
+      </div>
+      {/* Sidebar for vertical tabs */}
+      <div className="sidebar-tabs" style={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        alignItems: 'flex-start', 
+        gap: 16, 
+        marginRight: 32, 
+        minWidth: 180, 
+        height: '100vh', 
+        justifyContent: 'flex-end', 
+        position: 'relative', 
+        paddingTop: 32, 
+        paddingBottom: 32,
+        overflow: 'hidden'
+      }}>
+        {/* App title at the top of the sidebar */}
+        <h1 className="app-title sidebar-title" style={{ color: 'white', fontSize: 28, margin: 0, marginBottom: 32, textAlign: 'left', letterSpacing: 2, fontWeight: 700, textShadow: '0 2px 4px rgba(0,0,0,0.3)', position: 'sticky', top: 0, zIndex: 20, backgroundColor: '#232946', padding: '8px 0' }}>Smart Shop</h1>
+        <div style={{ flex: 1, minHeight: 40 }} />
+        <div style={{ display: 'flex', flexDirection: 'column', width: '100%', gap: 8, marginBottom: 48 }}>
         {TABS.map((tab) => (
           <button
             key={tab.value}
-            className={`tab-btn${activeTab === tab.value ? ' active' : ''}`}
+              className={`tab-btn-vertical${activeTab === tab.value ? ' active' : ''}`}
             onClick={() => setActiveTab(tab.value)}
+              style={{ width: '100%', textAlign: 'left', padding: '14px 24px', fontSize: 17, marginBottom: 8 }}
           >
             {tab.label}
           </button>
         ))}
-        <button className="view-cart-btn" onClick={openCartModal} title="View Cart">
-          🛒 View Cart
-        </button>
+        </div>
       </div>
+      {/* Main content area */}
+      <div className="main-content-centered" style={{
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100vh',
+        overflow: 'hidden',
+        padding: '20px 0'
+      }}>
       {cartModalOpen && (
         <div className="cart-modal-overlay" onClick={closeCartModal}>
           <div className="cart-modal" onClick={e => e.stopPropagation()}>
@@ -165,7 +213,9 @@ function App() {
         </div>
       )}
       {activeTab === 'robot' ? (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
         <RobotChat onCartIdUpdate={handleCartIdUpdate} />
+          </div>
       ) : (
         <>
           <form className="search-bar" onSubmit={handleSearch}>
@@ -180,9 +230,20 @@ function App() {
             </button>
           </form>
           {error && <div className="error-msg">{error}</div>}
-          <div className="results-section">
+          <div className="results-section" style={{
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+            maxHeight: 'calc(100vh - 200px)'
+          }}>
             {results.length > 0 ? (
-              <div className="platform-results">
+              <div className="platform-results" style={{
+                flex: 1,
+                overflow: 'hidden',
+                display: 'flex',
+                flexDirection: 'column'
+              }}>
                 {(() => {
                   const groupedProducts = results.reduce((acc, product) => {
                     const platform = product.platform || 'Unknown';
@@ -193,9 +254,19 @@ function App() {
                     return acc;
                   }, {});
                   return Object.entries(groupedProducts).map(([platform, products]) => (
-                    <div key={platform} className="platform-table">
+                    <div key={platform} className="platform-table" style={{
+                      flex: 1,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      overflow: 'hidden',
+                      maxHeight: '100%'
+                    }}>
                       <h3 className="platform-title">{platform.toUpperCase()}</h3>
-                      <div className="results-table">
+                      <div className="results-table" style={{
+                        flex: 1,
+                        overflow: 'auto',
+                        maxHeight: 'calc(100% - 60px)'
+                      }}>
                         <div className="results-header">
                           <span>Product</span>
                           <span>Price</span>
@@ -262,6 +333,7 @@ function App() {
           </div>
         </>
       )}
+      </div>
     </div>
   );
 }

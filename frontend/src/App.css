@@ -41,24 +41,39 @@
   color: #888;
 }
 
+/* FIXED: Prevent main container from scrolling */
 .main-container {
-  max-width: 1600px;
-  margin: 20px auto;
+  width: 100vw;
+  height: 100vh; /* Fixed height */
+  margin: 0;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-radius: 20px;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-  padding: 40px;
-  min-height: 80vh;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0 40px;
+  display: flex;
+  overflow: hidden; /* Prevent any overflow */
+  box-sizing: border-box;
+  position: fixed; /* Keep background fixed */
+  top: 0;
+  left: 0;
+}
+
+/* Ensure no horizontal scroll on sidebar or main content */
+.sidebar-tabs, .app-title, .robot-chat-container, .results-section, .platform-results {
+  max-width: 100%;
+  overflow-x: hidden;
 }
 
 .app-title {
-  text-align: center;
+  text-align: left;
   font-size: 2.8rem;
   margin-bottom: 30px;
   color: white;
   letter-spacing: 2px;
   font-weight: 700;
   text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  margin-top: 40px;
+  margin-left: 0;
 }
 
 .tabs {
@@ -97,6 +112,8 @@
   justify-content: center;
   gap: 15px;
   margin-bottom: 40px;
+  flex-shrink: 0; /* Prevent search bar from shrinking */
+  max-width: 100%; /* Ensure it doesn't overflow */
 }
 .search-bar input {
   width: 500px;
@@ -141,6 +158,8 @@
   grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
   gap: 30px;
   margin-top: 30px;
+  max-height: 100%; /* Ensure it doesn't exceed container */
+  overflow: hidden; /* Prevent overflow */
 }
 
 .platform-table {
@@ -149,10 +168,13 @@
   padding: 25px;
   box-shadow: 0 15px 35px rgba(0,0,0,0.1);
   min-height: 400px;
+  max-height: 600px; /* Fixed maximum height */
+  height: 500px; /* Fixed height */
   display: flex;
   flex-direction: column;
   transition: all 0.3s ease;
   border: 1px solid rgba(255,255,255,0.2);
+  overflow: hidden; /* Prevent overflow */
 }
 .platform-table:hover {
   transform: translateY(-5px);
@@ -183,14 +205,20 @@
 
 .results-section {
   margin-top: 30px;
+  max-height: calc(100vh - 250px); /* Fixed height to prevent page scroll */
+  overflow: hidden; /* Hide overflow on the section */
+  display: flex;
+  flex-direction: column;
+  flex: 1; /* Take available space */
 }
 .results-table {
   display: flex;
   flex-direction: column;
   gap: 10px;
   flex: 1;
-  overflow-y: auto;
-  max-height: 500px;
+  overflow-y: auto; /* Only the table content scrolls */
+  max-height: 400px; /* Fixed height for the table */
+  min-height: 200px; /* Minimum height */
 }
 .results-header, .results-row {
   display: grid;
@@ -326,7 +354,7 @@
 @media (max-width: 768px) {
   .main-container {
     padding: 20px;
-    margin: 10px;
+    margin: 0; /* Remove margin */
   }
   .platform-results {
     grid-template-columns: 1fr;
@@ -363,6 +391,7 @@
   }
 }
 
+/* FIXED: Robot chat container - constrained height, internal scrolling only */
 .robot-chat-container {
   max-width: 500px;
   margin: 32px auto;
@@ -371,17 +400,23 @@
   background: #fafbfc;
   display: flex;
   flex-direction: column;
-  height: 500px;
+  height: 500px; /* Fixed height */
+  max-height: 500px; /* Enforce max height */
+  min-height: 500px; /* Enforce min height */
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  overflow: hidden; /* Prevent container overflow */
 }
 
+/* FIXED: Only messages area scrolls, not the entire container */
 .robot-chat-messages {
   flex: 1;
-  overflow-y: auto;
+  overflow-y: auto; /* Only this scrolls */
+  overflow-x: hidden;
   padding: 16px;
   display: flex;
   flex-direction: column;
   gap: 12px;
+  max-height: calc(100% - 60px); /* Leave space for input */
 }
 
 .robot-message {
@@ -390,6 +425,7 @@
   max-width: 80%;
   word-break: break-word;
   font-size: 1rem;
+  flex-shrink: 0; /* Prevent message compression */
 }
 .robot-message.robot {
   background: #e3f0ff;
@@ -402,11 +438,15 @@
   color: #1b5e20;
 }
 
+/* FIXED: Input stays at bottom, doesn't scroll */
 .robot-chat-input {
   display: flex;
   border-top: 1px solid #e0e0e0;
   padding: 12px;
   background: #fff;
+  flex-shrink: 0; /* Prevent input from shrinking */
+  position: relative;
+  bottom: 0;
 }
 .robot-chat-input input {
   flex: 1;
@@ -442,6 +482,7 @@
   padding: 8px 12px;
   margin-bottom: 6px;
   font-size: 0.98rem;
+  flex-shrink: 0;
 }
 .robot-platform {
   font-weight: bold;
@@ -505,4 +546,262 @@
 }
 .cart-modal li:last-child {
   border-bottom: none;
+}
+
+/* FIXED: Vertical sidebar - constrained height */
+.sidebar-tabs {
+  background: #232946;
+  border-radius: 18px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  padding: 32px 18px 32px 18px;
+  min-width: 180px;
+  margin-right: 32px;
+  margin-left: 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 16px;
+  height: 100vh; /* Fixed height to viewport */
+  max-height: 100vh;
+  overflow: hidden; /* No sidebar overflow */
+  position: relative;
+}
+
+.tab-btn-vertical {
+  padding: 14px 24px;
+  font-size: 1.1rem;
+  border: none;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.18);
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-weight: 600;
+  width: 100%;
+  text-align: left;
+  margin-bottom: 8px;
+  border: 2px solid rgba(255,255,255,0.18);
+  flex-shrink: 0; /* Prevent tab compression */
+}
+.tab-btn-vertical:hover {
+  background: rgba(255,255,255,0.28);
+  color: #667eea;
+}
+.tab-btn-vertical.active {
+  background: white;
+  color: #667eea;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+  border: 2px solid #667eea;
+}
+
+/* Center main content vertically and horizontally - FIXED */
+.main-content-centered {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start; /* Changed from center to flex-start */
+  overflow: hidden; /* Prevent any overflow */
+  max-height: 100vh; /* Ensure it doesn't exceed viewport */
+  min-height: 0;
+  height: 100vh; /* Fixed height */
+  width: 100%;
+  padding: 20px 0;
+  box-sizing: border-box;
+}
+
+/* FIXED: Platform results - no margin changes */
+.platform-results {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  margin-top: 0;
+  height: auto;
+  min-height: 0;
+  justify-items: center;
+  overflow: hidden; /* Prevent overflow */
+}
+
+/* FIXED: Consistent box sizing for chat and results */
+.platform-table, .robot-chat-container {
+  background: white;
+  border-radius: 20px;
+  padding: 25px;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+  min-height: 400px;
+  max-height: 600px;
+  height: 500px;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255,255,255,0.2);
+  width: 80vw;
+  max-width: 600px;
+  margin: 0 auto;
+  overflow: hidden; /* Prevent box overflow */
+}
+
+/* Ensure sidebar title stays visible */
+.sidebar-title {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 20 !important;
+  background-color: #232946 !important;
+  padding: 8px 0 !important;
+  margin-bottom: 32px !important;
+  flex-shrink: 0 !important;
+}
+
+/* Only allow vertical scroll for messages, not the whole box */
+.robot-chat-messages {
+  flex: 1 1 0%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Custom scrollbars for messages only */
+.robot-chat-messages::-webkit-scrollbar {
+  width: 8px;
+  background: transparent;
+}
+.robot-chat-messages::-webkit-scrollbar-thumb {
+  background: #e0e0e0;
+  border-radius: 4px;
+}
+.robot-chat-messages::-webkit-scrollbar-thumb:hover {
+  background: #bdbdbd;
+}
+
+/* FIXED: Mobile responsive - maintain constraints */
+@media (max-width: 900px) {
+  .main-container {
+    flex-direction: column !important;
+    padding: 0 8px;
+    width: 100vw;
+    height: 100vh; /* Keep fixed height */
+    position: fixed; /* Keep fixed position */
+  }
+  .sidebar-tabs {
+    flex-direction: row;
+    align-items: center;
+    min-width: 0;
+    margin-right: 0;
+    margin-left: 0;
+    margin-bottom: 0;
+    padding: 18px 8px;
+    border-radius: 0 0 12px 12px;
+    gap: 8px;
+    width: 100vw;
+    height: auto;
+    min-height: 0;
+    max-height: 80px; /* Limit sidebar height */
+    box-shadow: 0 2px 16px rgba(0,0,0,0.08);
+    justify-content: flex-end;
+    overflow: hidden;
+  }
+  .tab-btn-vertical {
+    font-size: 1rem;
+    padding: 10px 14px;
+    border-radius: 8px;
+    margin-bottom: 0;
+  }
+  .platform-table, .robot-chat-container {
+    min-height: 250px;
+    max-height: 350px;
+    height: 250px;
+    width: 98vw;
+    max-width: 98vw;
+  }
+  .main-content-centered {
+    height: calc(100vh - 80px); /* Account for sidebar height */
+    padding-top: 16px;
+    padding-bottom: 16px;
+  }
+}
+
+/* FIXED: Root elements - prevent any document scrolling */
+html, body, #root {
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden; /* This is critical - prevents any document scrolling */
+  position: fixed; /* Additional constraint */
+  top: 0;
+  left: 0;
+}
+
+.view-cart-btn.top-right {
+  position: absolute;
+  top: 24px;
+  right: 40px;
+  z-index: 10;
+  margin: 0;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid #1976d2;
+  color: #1976d2;
+  font-size: 1rem;
+  font-weight: bold;
+  padding: 8px 16px;
+  transition: background 0.2s, color 0.2s;
+}
+.view-cart-btn.top-right:hover {
+  background: #1976d2;
+  color: #fff;
+}
+
+@media (max-width: 900px) {
+  .view-cart-btn.top-right {
+    right: 12px;
+    top: 12px;
+    font-size: 0.95rem;
+    padding: 6px 10px;
+  }
+}
+
+/* Robot image styling */
+.robot-image-container {
+  position: absolute;
+  bottom: 200px;
+  right: 20px;
+  z-index: 5;
+  width: 160px;
+  height: 160px;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.2));
+  transition: transform 0.3s ease;
+}
+
+.robot-image-container:hover {
+  transform: scale(1.05);
+}
+
+.robot-image-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 12px;
+}
+
+@media (max-width: 900px) {
+  .robot-image-container {
+    width: 120px;
+    height: 120px;
+    bottom: 150px;
+    right: 12px;
+  }
+}
+
+@media (max-width: 600px) {
+  .robot-image-container {
+    width: 100px;
+    height: 100px;
+    bottom: 120px;
+    right: 8px;
+  }
 }
