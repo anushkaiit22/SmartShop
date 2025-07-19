@@ -38,7 +38,7 @@ class LocalDeploymentTester:
         try:
             import fastapi
             import uvicorn
-            import pymongo
+            # import pymongo  # Removed for Vercel compatibility
             import requests
             import bs4  # beautifulsoup4 is imported as bs4
             self.print_status("✅ Python dependencies found", "SUCCESS")

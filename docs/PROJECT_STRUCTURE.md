@@ -147,8 +147,6 @@ smartshop_backend/
 - Budget constraints
 - Location-based search
 
-## 🚀 Deployment Options
-
 ### 1. Local Development
 ```bash
 # Install dependencies
@@ -170,12 +168,6 @@ start.bat
 # Unix/Linux/macOS
 ./start.sh
 ```
-
-### 3. Cloud Deployment
-- **Railway**: Direct deployment from GitHub
-- **Heroku**: Container deployment
-- **AWS/GCP**: Container orchestration
-- **Vercel**: Serverless deployment
 
 ## 📊 Data Flow
 

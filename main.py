@@ -16,11 +16,13 @@ from app.database.mongodb import connect_to_mongo, close_mongo_connection
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup
-    await connect_to_mongo()
+    # Startup - only connect if MongoDB URL is provided
+    if settings.MONGODB_URL:
+        await connect_to_mongo()
     yield
     # Shutdown
-    await close_mongo_connection()
+    if settings.MONGODB_URL:
+        await close_mongo_connection()
 
 
 app = FastAPI(

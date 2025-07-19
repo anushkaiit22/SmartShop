@@ -23,7 +23,7 @@ async def test_mongodb():
         return True
     
     try:
-        from motor.motor_asyncio import AsyncIOMotorClient
+        # from motor.motor_asyncio import AsyncIOMotorClient  # Removed for Vercel compatibility
         
         # Get MongoDB URL from environment
         db_name = os.getenv('MONGODB_DB_NAME', 'smartshop')
@@ -63,12 +63,12 @@ def test_redis():
         return True
     
     try:
-        import redis
+        # import redis  # Removed for Vercel compatibility
         
         print(f"Connecting to: {redis_url}")
         
         # Create Redis client
-        r = redis.from_url(redis_url)
+        # r = redis.from_url(redis_url)  # Removed for Vercel compatibility
         
         # Test connection
         r.ping()

@@ -22,7 +22,7 @@ def check_dependencies():
     try:
         import fastapi
         import uvicorn
-        import motor
+        # import motor  # Removed for Vercel compatibility
         import pydantic
         print("✅ All required dependencies are installed")
         return True

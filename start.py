@@ -22,8 +22,8 @@ def check_dependencies():
         import fastapi
         import uvicorn
         import pydantic
-        import motor
-        import redis
+        # import motor  # Removed for Vercel compatibility
+# import redis  # Removed for Vercel compatibility
         print("All required packages are installed")
         return True
     except ImportError as e:
