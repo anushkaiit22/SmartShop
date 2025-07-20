@@ -2,7 +2,8 @@
   "version": 2,
   "functions": {
     "api/index.py": {
-      "maxDuration": 30
+      "maxDuration": 15,
+      "memory": 1024
     }
   },
   "routes": [
@@ -10,5 +11,9 @@
       "src": "/(.*)",
       "dest": "/api/index.py"
     }
-  ]
+  ],
+  "env": {
+    "PYTHONPATH": ".",
+    "VERCEL_ENV": "production"
+  }
 } 

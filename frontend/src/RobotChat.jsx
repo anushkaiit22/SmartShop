@@ -9,6 +9,7 @@ function RobotChat({ onCartIdUpdate }) {
   const [loading, setLoading] = useState(false);
   const [cartId, setCartId] = useState(null);
   const [pendingProductOptions, setPendingProductOptions] = useState(null); // For product selection
+  const [retryCount, setRetryCount] = useState(0);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -27,15 +28,24 @@ function RobotChat({ onCartIdUpdate }) {
     setMessages((msgs) => [...msgs, { sender: 'user', text: userText }]);
     setLoading(true);
     setPendingProductOptions(null);
+    
     try {
       const body = { user_message: userText, cart_id: cartId, last_action: lastAction, platforms: ['flipkart'] };
       if (productSelection !== null) body.product_selection = productSelection;
       if (selectedProductObj) body.selected_product = selectedProductObj;
       
-      // Use the API utility function instead of direct fetch
-      const data = await robotInteract(userText, cartId, lastAction, ['flipkart'], productSelection, selectedProductObj);
+      // Add timeout for the API call
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Request timed out. The robot is taking too long to respond.')), 15000)
+      );
       
-      if (!data.success && data.action !== 'select_product') throw new Error(data.message || 'Unknown error');
+      const apiPromise = robotInteract(userText, cartId, lastAction, ['flipkart'], productSelection, selectedProductObj);
+      
+      const data = await Promise.race([apiPromise, timeoutPromise]);
+      
+      if (!data.success && data.action !== 'select_product') {
+        throw new Error(data.message || 'Unknown error');
+      }
 
       if (data.action === 'select_product') {
         setPendingProductOptions(data.data);
@@ -58,9 +68,35 @@ function RobotChat({ onCartIdUpdate }) {
       } else {
         setMessages((msgs) => [...msgs, { sender: 'robot', text: data.message }]);
       }
+      
+      // Reset retry count on success
+      setRetryCount(0);
+      
     } catch (err) {
       console.error('Robot interaction error:', err);
-      setMessages((msgs) => [...msgs, { sender: 'robot', text: `Sorry, something went wrong: ${err.message}` }]);
+      
+      let errorMessage = `Sorry, something went wrong: ${err.message}`;
+      
+      // Provide more helpful error messages
+      if (err.message.includes('timeout') || err.message.includes('timed out')) {
+        errorMessage = "The robot is taking too long to respond. This might be due to slow internet or high server load. Please try again in a moment.";
+      } else if (err.message.includes('No products found')) {
+        errorMessage = "I couldn't find any products for that search. Try using different keywords or check your spelling.";
+      } else if (err.message.includes('network') || err.message.includes('connection')) {
+        errorMessage = "Network connection issue. Please check your internet connection and try again.";
+      } else if (err.message.includes('500') || err.message.includes('server')) {
+        errorMessage = "Server error. The service is temporarily unavailable. Please try again later.";
+      }
+      
+      setMessages((msgs) => [...msgs, { 
+        sender: 'robot', 
+        text: errorMessage,
+        isError: true
+      }]);
+      
+      // Increment retry count
+      setRetryCount(prev => prev + 1);
+      
     } finally {
       setLoading(false);
       setInput('');
@@ -71,6 +107,7 @@ function RobotChat({ onCartIdUpdate }) {
   const handleSend = (e) => {
     e.preventDefault();
     if (!input.trim()) return;
+    
     const lastMsg = messages[messages.length - 1];
     if (lastMsg && lastMsg.action === 'confirm_cheapest') {
       if (input.trim().toLowerCase().startsWith('y')) {
@@ -91,6 +128,21 @@ function RobotChat({ onCartIdUpdate }) {
     setPendingProductOptions(null);
   };
 
+  const handleRetry = () => {
+    if (retryCount < 3) {
+      const lastUserMessage = messages.filter(msg => msg.sender === 'user').pop();
+      if (lastUserMessage) {
+        sendMessage(lastUserMessage.text);
+      }
+    } else {
+      setMessages((msgs) => [...msgs, { 
+        sender: 'robot', 
+        text: "I'm having trouble connecting right now. Please try again in a few minutes or contact support if the problem persists.",
+        isError: true
+      }]);
+    }
+  };
+
   function renderProducts(products, isCart = false) {
     if (!products || products.length === 0) return isCart ? 'No products added.' : 'No products found.';
     return (
@@ -102,6 +154,9 @@ function RobotChat({ onCartIdUpdate }) {
                 src={p.images[0].url} 
                 alt={p.images[0].alt_text || p.name || 'Product image'} 
                 style={{ width: 64, height: 64, objectFit: 'contain', marginRight: 8, verticalAlign: 'middle', borderRadius: 4, border: '1px solid #eee' }}
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                }}
               />
             )}
             <strong>{p.name || p.product_name || 'Product'}</strong> - ₹{p.price?.current_price || p.price || '-'}
@@ -127,7 +182,26 @@ function RobotChat({ onCartIdUpdate }) {
     <div className="robot-chat-container">
       <div className="robot-chat-messages">
         {messages.map((msg, idx) => (
-          <div key={idx} className={`robot-message ${msg.sender}`}>{typeof msg.text === 'string' ? msg.text : msg.text}</div>
+          <div key={idx} className={`robot-message ${msg.sender} ${msg.isError ? 'error' : ''}`}>
+            {typeof msg.text === 'string' ? msg.text : msg.text}
+            {msg.isError && retryCount < 3 && (
+              <button 
+                onClick={handleRetry}
+                style={{
+                  marginTop: '8px',
+                  padding: '4px 8px',
+                  fontSize: '12px',
+                  backgroundColor: '#1976d2',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer'
+                }}
+              >
+                Try Again
+              </button>
+            )}
+          </div>
         ))}
         {pendingProductOptions && (
           <div className="robot-message robot">
@@ -154,6 +228,18 @@ function RobotChat({ onCartIdUpdate }) {
             </div>
           </div>
         )}
+        {loading && (
+          <div className="robot-message robot">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div className="loading-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+              Thinking...
+            </div>
+          </div>
+        )}
         <div ref={messagesEndRef} />
       </div>
       <form className="robot-chat-input" onSubmit={handleSend}>
@@ -164,7 +250,9 @@ function RobotChat({ onCartIdUpdate }) {
           placeholder={loading ? 'Robot is thinking...' : 'Type your message...'}
           disabled={loading || !!pendingProductOptions}
         />
-        <button type="submit" disabled={loading || !input.trim() || !!pendingProductOptions}>{loading ? '...' : 'Send'}</button>
+        <button type="submit" disabled={loading || !input.trim() || !!pendingProductOptions}>
+          {loading ? '...' : 'Send'}
+        </button>
       </form>
     </div>
   );

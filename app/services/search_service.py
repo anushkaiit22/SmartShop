@@ -14,70 +14,84 @@ logger = logging.getLogger(__name__)
 
 
 class SearchService:
-    """Main service for coordinating product searches across platforms"""
+    """Main service for coordinating product searches across platforms with Vercel-optimized fallbacks"""
     
     def __init__(self):
         # We don't initialize scrapers here - we'll create them as needed
         pass
     
     async def search_products(self, request: ProductSearchRequest) -> ProductSearchResponse:
-        """Search for products across multiple platforms"""
+        """Search for products across multiple platforms with Vercel-optimized fallbacks"""
         start_time = time.time()
         
         try:
             # Parse natural language query if needed
             parsed_constraints = None
             if self._is_natural_language(request.query):
-                parsed_query = await query_parser.parse_query(request.query)
-                # Use parsed products for search
-                search_queries = [product.product_name for product in parsed_query.products]
-                parsed_constraints = parsed_query.constraints
-                
-                # Use parsed price constraints if explicit max_price is not provided
-                if request.max_price is None and parsed_constraints.total_budget:
-                    request.max_price = parsed_constraints.total_budget
+                try:
+                    parsed_query = await asyncio.wait_for(
+                        query_parser.parse_query(request.query),
+                        timeout=3.0  # Reduced timeout for Vercel
+                    )
+                    # Use parsed products for search
+                    search_queries = [product.product_name for product in parsed_query.products]
+                    parsed_constraints = parsed_query.constraints
                     
-                # Use parsed rating constraints if explicit min_rating is not provided
-                if request.min_rating is None:
-                    # Check if any product has min_rating specified
-                    for product in parsed_query.products:
-                        if product.min_rating:
-                            request.min_rating = product.min_rating
-                            break
+                    # Use parsed price constraints if explicit max_price is not provided
+                    if request.max_price is None and parsed_constraints.total_budget:
+                        request.max_price = parsed_constraints.total_budget
+                        
+                    # Use parsed rating constraints if explicit min_rating is not provided
+                    if request.min_rating is None:
+                        # Check if any product has min_rating specified
+                        for product in parsed_query.products:
+                            if product.min_rating:
+                                request.min_rating = product.min_rating
+                                break
+                except (asyncio.TimeoutError, Exception) as e:
+                    logger.warning(f"NLP parsing failed, using direct query: {e}")
+                    search_queries = [request.query]
             else:
                 search_queries = [request.query]
             
             # Determine which platforms to search
-            platforms_to_search = request.platforms or [Platform.AMAZON, Platform.FLIPKART, Platform.MEESHO, Platform.BLINKIT]
+            platforms_to_search = request.platforms or [Platform.FLIPKART, Platform.AMAZON, Platform.MEESHO, Platform.BLINKIT]
             
             all_products = []
             
-            # Search across platforms with proper async context managers
-            for platform in platforms_to_search:
-                try:
-                    if platform == Platform.AMAZON:
-                        async with MockAmazonScraper() as scraper:
-                            products = await scraper.search_products(request.query, request.limit)
-                            logger.info(f"Amazon (Mock): Found {len(products)} products")
-                    elif platform == Platform.FLIPKART:
-                        async with FlipkartScraper() as scraper:
-                            products = await scraper.search_products(request.query, request.limit)
-                            logger.info(f"Flipkart (Real): Found {len(products)} products")
-                    elif platform == Platform.MEESHO:
-                        async with MockMeeshoScraper() as scraper:
-                            products = await scraper.search_products(request.query, request.limit)
-                            logger.info(f"Meesho (Mock): Found {len(products)} products")
-                    elif platform == Platform.BLINKIT:
-                        async with MockBlinkitScraper() as scraper:
-                            products = await scraper.search_products(request.query, request.limit)
-                            logger.info(f"Blinkit (Mock): Found {len(products)} products")
-                    else:
-                        logger.warning(f"Platform {platform.value} not supported")
-                        continue
-                    all_products.extend(products)
-                except Exception as e:
-                    logger.error(f"Error searching {platform.value}: {e}")
-                    continue
+            # For Vercel, prioritize mock data for speed
+            if settings.IS_VERCEL:
+                # Try mock scrapers first for faster response
+                mock_products = await self._search_with_mock_scrapers(request, platforms_to_search)
+                if mock_products:
+                    all_products.extend(mock_products)
+                    logger.info(f"Vercel: Found {len(mock_products)} products from mock scrapers")
+                
+                # Only try real scrapers if we have time and no mock products
+                if not all_products:
+                    real_products = await self._search_with_real_scrapers_vercel(request, platforms_to_search)
+                    if real_products:
+                        all_products.extend(real_products)
+                        logger.info(f"Vercel: Found {len(real_products)} products from real scrapers")
+            else:
+                # Local development: try real scrapers first
+                real_products = await self._search_with_real_scrapers(request, platforms_to_search)
+                if real_products:
+                    all_products.extend(real_products)
+                    logger.info(f"Local: Found {len(real_products)} products from real scrapers")
+                
+                # Fall back to mock scrapers if needed
+                if not all_products and settings.ENABLE_MOCK_FALLBACK:
+                    mock_products = await self._search_with_mock_scrapers(request, platforms_to_search)
+                    if mock_products:
+                        all_products.extend(mock_products)
+                        logger.info(f"Local: Found {len(mock_products)} products from mock scrapers (fallback)")
+            
+            # If still no products, create basic mock products based on query
+            if not all_products:
+                basic_products = self._create_basic_mock_products(request.query, platforms_to_search)
+                all_products.extend(basic_products)
+                logger.info(f"Created {len(basic_products)} basic mock products")
             
             # Apply filters
             filtered_products = self._apply_filters(all_products, request)
@@ -97,19 +111,201 @@ class SearchService:
                 location=request.location
             )
             
+            # Determine response message based on data source
+            if settings.IS_VERCEL:
+                if mock_products:
+                    message = f"Found {len(limited_products)} products (demo data - optimized for speed)"
+                elif real_products:
+                    message = f"Found {len(limited_products)} products across {len(platforms_to_search)} platforms"
+                else:
+                    message = f"Found {len(limited_products)} products (basic demo data)"
+            else:
+                if real_products:
+                    message = f"Found {len(limited_products)} products across {len(platforms_to_search)} platforms"
+                elif mock_products:
+                    message = f"Found {len(limited_products)} products (demo data - real search unavailable)"
+                else:
+                    message = f"Found {len(limited_products)} products (basic demo data)"
+            
             return ProductSearchResponse(
                 success=True,
                 data=comparison,
-                message=f"Found {len(limited_products)} products across {len(platforms_to_search)} platforms (Flipkart: Real, Others: Demo Data)"
+                message=message
             )
         
         except Exception as e:
             logger.error(f"Search service error: {e}")
+            # Return mock data as final fallback
+            fallback_products = self._create_basic_mock_products(request.query, [Platform.FLIPKART])
             return ProductSearchResponse(
-                success=False,
-                error=str(e),
-                message="Failed to search products"
+                success=True,
+                data=ProductComparison(
+                    query=request.query,
+                    products=fallback_products[:request.limit],
+                    total_results=len(fallback_products),
+                    search_time=time.time() - start_time,
+                    location=request.location
+                ),
+                message=f"Using demo data due to search error: {str(e)}"
             )
+    
+    async def _search_with_real_scrapers_vercel(self, request: ProductSearchRequest, platforms: List[Platform]) -> List[Product]:
+        """Search with real scrapers optimized for Vercel (shorter timeout)"""
+        all_products = []
+        
+        # Only try Flipkart on Vercel for speed
+        if Platform.FLIPKART in platforms:
+            try:
+                products = await asyncio.wait_for(
+                    self._search_flipkart(request.query, request.limit),
+                    timeout=settings.SCRAPER_TIMEOUT - settings.VERCEL_TIMEOUT_BUFFER
+                )
+                all_products.extend(products)
+            except (asyncio.TimeoutError, Exception) as e:
+                logger.warning(f"Vercel: Flipkart scraper failed: {e}")
+        
+        return all_products
+    
+    async def _search_with_real_scrapers(self, request: ProductSearchRequest, platforms: List[Platform]) -> List[Product]:
+        """Search with real scrapers with timeout"""
+        all_products = []
+        
+        # Create tasks for concurrent scraping
+        tasks = []
+        for platform in platforms:
+            if platform == Platform.FLIPKART:
+                tasks.append(self._search_flipkart(request.query, request.limit))
+            # Add other real scrapers here when available
+        
+        # Execute with timeout
+        try:
+            results = await asyncio.wait_for(
+                asyncio.gather(*tasks, return_exceptions=True),
+                timeout=settings.SCRAPER_TIMEOUT
+            )
+            
+            for result in results:
+                if isinstance(result, list):
+                    all_products.extend(result)
+                elif isinstance(result, Exception):
+                    logger.warning(f"Real scraper error: {result}")
+                    
+        except asyncio.TimeoutError:
+            logger.warning("Real scrapers timed out, falling back to mock data")
+        except Exception as e:
+            logger.error(f"Error with real scrapers: {e}")
+        
+        return all_products
+    
+    async def _search_flipkart(self, query: str, limit: int) -> List[Product]:
+        """Search Flipkart with timeout"""
+        try:
+            async with FlipkartScraper() as scraper:
+                return await scraper.search_products(query, limit)
+        except Exception as e:
+            logger.error(f"Flipkart scraper error: {e}")
+            return []
+    
+    async def _search_with_mock_scrapers(self, request: ProductSearchRequest, platforms: List[Platform]) -> List[Product]:
+        """Search with mock scrapers (fast fallback)"""
+        all_products = []
+        
+        # Limit to 2 platforms for speed on Vercel
+        platforms_to_search = platforms[:2] if settings.IS_VERCEL else platforms
+        
+        for platform in platforms_to_search:
+            try:
+                if platform == Platform.AMAZON:
+                    async with MockAmazonScraper() as scraper:
+                        products = await scraper.search_products(request.query, request.limit)
+                        all_products.extend(products)
+                elif platform == Platform.MEESHO:
+                    async with MockMeeshoScraper() as scraper:
+                        products = await scraper.search_products(request.query, request.limit)
+                        all_products.extend(products)
+                elif platform == Platform.BLINKIT:
+                    async with MockBlinkitScraper() as scraper:
+                        products = await scraper.search_products(request.query, request.limit)
+                        all_products.extend(products)
+                        
+                # Add small delay for mock scrapers
+                await asyncio.sleep(settings.MOCK_FALLBACK_DELAY)
+                
+            except Exception as e:
+                logger.error(f"Mock scraper error for {platform.value}: {e}")
+                continue
+        
+        return all_products
+    
+    def _create_basic_mock_products(self, query: str, platforms: List[Platform]) -> List[Product]:
+        """Create basic mock products when all else fails"""
+        products = []
+        
+        # Common product templates based on query
+        query_lower = query.lower()
+        
+        if any(word in query_lower for word in ['cheese', 'dairy', 'milk']):
+            product_names = [
+                f"Amul {query.title()} - 200g",
+                f"Britannia {query.title()} - 250g", 
+                f"Mother Dairy {query.title()} - 500g"
+            ]
+        elif any(word in query_lower for word in ['phone', 'mobile', 'smartphone']):
+            product_names = [
+                f"iPhone 15 - 128GB",
+                f"Samsung Galaxy S24 - 256GB",
+                f"OnePlus 12 - 512GB"
+            ]
+        elif any(word in query_lower for word in ['laptop', 'computer']):
+            product_names = [
+                f"MacBook Air M2 - 13 inch",
+                f"Dell Inspiron 15 - Intel i5",
+                f"HP Pavilion 14 - AMD Ryzen 5"
+            ]
+        else:
+            product_names = [
+                f"{query.title()} - Premium Quality",
+                f"{query.title()} - Best Seller",
+                f"{query.title()} - Value Pack"
+            ]
+        
+        base_prices = [299, 499, 799, 1299, 1999, 2999]
+        
+        # Limit to 2 platforms for speed on Vercel
+        platforms_to_use = platforms[:2] if settings.IS_VERCEL else platforms[:3]
+        
+        for i, platform in enumerate(platforms_to_use):
+            for j, name in enumerate(product_names):
+                if len(products) >= (4 if settings.IS_VERCEL else 6):  # Limit products for Vercel
+                    break
+                    
+                price = base_prices[(i + j) % len(base_prices)]
+                
+                product = Product(
+                    name=name,
+                    platform=platform,
+                    platform_type=PlatformType.ECOMMERCE if platform != Platform.BLINKIT else PlatformType.QUICK_COMMERCE,
+                    platform_product_id=f"mock_{platform.value}_{i}_{j}",
+                    platform_url=f"https://{platform.value}.com/product/{i}_{j}",
+                    price=ProductPrice(
+                        current_price=price,
+                        original_price=price * 1.2,
+                        currency="INR"
+                    ),
+                    rating=ProductRating(
+                        rating=4.0 + (i + j) * 0.1,
+                        total_ratings=100 + (i + j) * 50
+                    ),
+                    images=[ProductImage(url=f"https://via.placeholder.com/300x300?text={name.replace(' ', '+')}")],
+                    delivery=DeliveryInfo(
+                        delivery_time="2-3 days" if platform != Platform.BLINKIT else "10-30 mins",
+                        delivery_cost=0.0 if platform != Platform.BLINKIT else 20.0,
+                        is_free_delivery=True if platform != Platform.BLINKIT else False
+                    )
+                )
+                products.append(product)
+        
+        return products
     
     def _is_natural_language(self, query: str) -> bool:
         """Check if query is natural language"""
