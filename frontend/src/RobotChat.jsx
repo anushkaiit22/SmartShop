@@ -34,9 +34,9 @@ function RobotChat({ onCartIdUpdate }) {
       if (productSelection !== null) body.product_selection = productSelection;
       if (selectedProductObj) body.selected_product = selectedProductObj;
       
-      // Add timeout for the API call
+      // Ultra-fast timeout for Vercel deployment
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Request timed out. The robot is taking too long to respond.')), 15000)
+        setTimeout(() => reject(new Error('Request timed out. The robot is taking too long to respond.')), 8000)
       );
       
       const apiPromise = robotInteract(userText, cartId, lastAction, ['flipkart'], productSelection, selectedProductObj);

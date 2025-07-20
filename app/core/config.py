@@ -33,16 +33,16 @@ class Settings(BaseSettings):
         "https://smart-shop-frontend-*.vercel.app",
         "https://smartshop-backend-*.vercel.app"
     ]
-    # Scraping - Optimized for Vercel serverless
-    SCRAPER_TIMEOUT: int = 8  # Further reduced for Vercel
-    SCRAPER_DELAY: float = 0.2  # Reduced for faster responses
-    MAX_CONCURRENT_REQUESTS: int = 2  # Reduced for Vercel limits
+    # Scraping - Ultra-optimized for Vercel serverless
+    SCRAPER_TIMEOUT: int = 5  # Very aggressive timeout for Vercel
+    SCRAPER_DELAY: float = 0.1  # Minimal delay
+    MAX_CONCURRENT_REQUESTS: int = 1  # Single request for Vercel
     # Fallback settings
     ENABLE_MOCK_FALLBACK: bool = True
-    MOCK_FALLBACK_DELAY: float = 0.05  # Very fast mock responses
+    MOCK_FALLBACK_DELAY: float = 0.01  # Almost instant mock responses
     # Vercel-specific optimizations
     IS_VERCEL: bool = os.getenv("VERCEL_ENV") == "production"
-    VERCEL_TIMEOUT_BUFFER: int = 2  # Buffer for Vercel function timeout
+    VERCEL_TIMEOUT_BUFFER: int = 1  # Minimal buffer
     # E-commerce Platforms
     ENABLED_PLATFORMS: List[str] = [
         "amazon",
